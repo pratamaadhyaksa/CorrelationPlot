@@ -1,0 +1,36 @@
+S=S4.NewSimulation()
+S:SetLattice({850,0},{0,0})%1D lattice
+S:SetNumG(50)
+
+%Material definition (real and imaginary part of dielectric)
+S:AddMaterial("Vacuum",{1,0}) 
+S:AddMaterial("PDMS",{1.96,0})
+S:AddMaterial("glass",{2.29,0})
+
+%Layer definition
+S:AddLayer('AirAbove',0,'Vacuum')
+S:AddLayer('Middle',200,'Vacuum')
+S:SetLayerPatternRectangle('Middle',%which layer to alter
+'PDMS',%material in rectangle
+{0,0},%center
+0,%tilt angle (in degrees)
+{385})%half-width
+S:AddLayer('glassBelow',0,'glass')
+
+%light excitation setting
+S:SetExcitationPlaneWave({0,0},%incident angle sperical coordinates: phi in [0,180], theta in [0,360]
+{1,0}, %s-polarization amplitude and phase (in degrees)
+{1,0}) %p-polarization amplitude and phase (in degrees)
+
+%Sweep frequency and getting the results
+for freq=0.001,0.01,0.0005 do
+    S:Setfrequency(freq)
+    
+    incidence_flux,reflection_flux=S:GetPoyntingFlux('AirAbove',0)
+    reflection_flux=(-1)*reflection_flux/incidence_flux;
+    
+    transmission_flux,back_incidence_flux=S:GetPoyntingFlux('glassBelow',0)
+    transmission_flux=transmission_flux/incidence_flux
+    
+    print(freq..'\t'..reflection_flux..'\t'..transmission_flux);
+end
